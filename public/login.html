@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Clean | Login</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:"Segoe UI",sans-serif;
+}
+
+body{
+min-height:100vh;
+background:linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)),
+url("https://images.unsplash.com/photo-1501004318641-b39e6451bec6");
+background-size:cover;
+background-position:center;
+display:flex;
+justify-content:center;
+align-items:center;
+}
+
+.form-box{
+background:white;
+padding:40px;
+width:380px;
+border-radius:15px;
+text-align:center;
+box-shadow:0 20px 40px rgba(0,0,0,0.4);
+}
+
+.input-box{
+margin-bottom:25px;
+}
+
+.input-box input{
+width:100%;
+padding:10px;
+border:none;
+border-bottom:2px solid #ccc;
+outline:none;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#2ecc71;
+border:none;
+color:white;
+font-size:16px;
+border-radius:5px;
+cursor:pointer;
+}
+
+button:hover{
+background:#27ae60;
+}
+
+.link{
+margin-top:15px;
+font-size:14px;
+}
+
+.link a{
+text-decoration:none;
+color:#27ae60;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<div class="form-box">
+<h1>🌱 Smart Clean</h1>
+<p>Welcome Back Eco-Hero!</p>
+
+<form id="loginForm">
+
+<div class="input-box">
+<input type="email" id="email" placeholder="Email" required>
+</div>
+
+<div class="input-box">
+<input type="password" id="password" placeholder="Password" required>
+</div>
+
+<button type="submit">Login</button>
+
+<div class="link">
+Don’t have an account?
+<a href="register.html">Sign Up</a>
+</div>
+
+</form>
+</div>
+
+<<script>
+const form = document.getElementById("loginForm");
+
+form.addEventListener("submit", async function (e) {
+  e.preventDefault();
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  try {
+    const res = await fetch("http://localhost:5000/api/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      alert("✅ Login Successful!");
+
+      // ✅ Save user data for dashboard
+      localStorage.setItem("user", JSON.stringify(data));
+      localStorage.setItem("loggedIn", "true");
+
+      window.location.href = "dashboard.html";
+    } else {
+      alert("❌ " + data.message);
+    }
+
+  } catch (error) {
+    console.error(error);
+    alert("❌ Server not reachable");
+  }
+});
+</script>
+
+</body>
+</html>

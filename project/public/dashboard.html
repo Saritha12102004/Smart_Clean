@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smart Clean | Dashboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header>
+  <div class="logo">🌱 Smart Clean</div>
+  <nav>
+    <a href="#">Dashboard</a>
+    <a href="#upload">Upload</a>
+    <a href="#">Leaderboard</a>
+    <a href="#">Rewards</a>
+    <a href="#" onclick="logout()">Logout</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <h1>Welcome, <span id="name"></span> 👋</h1>
+  <p>
+    Age: <span id="age"></span> | 
+    Role: <span id="role"></span>
+  </p>
+  <p>Upload. Earn Points. Save the Planet. Get Rewards.</p>
+  <button onclick="scrollToUpload()">Upload Trash Photo</button>
+</section>
+
+<section class="stats">
+  <div class="card">
+    <h2>⭐ Points</h2>
+    <p id="points">0</p>
+  </div>
+  <div class="card">
+    <h2>📸 Uploads</h2>
+    <p id="uploads">0</p>
+  </div>
+  <div class="card">
+    <h2>🎁 Rewards</h2>
+    <p id="rewards">₹0</p>
+  </div>
+</section>
+
+<section class="upload" id="upload">
+  <h2>Upload Trash in Bin</h2>
+  <p>Take a photo and help keep your city clean!</p>
+
+  <div class="upload-box">
+    <input type="file" id="trashPhoto" accept="image/*" />
+    <img id="preview" style="width:150px;margin-top:10px;" />
+    <button onclick="submitUpload()">Submit for Verification</button>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Smart Clean | Clean Today. Earn Tomorrow.</p>
+</footer>
+
+<script>
+// ================= AUTH =================
+const userData = localStorage.getItem("user");
+
+if (!userData) {
+  alert("Please login first!");
+  window.location.href = "login.html";
+}
+
+let user = JSON.parse(userData);
+
+// ================= FETCH USER =================
+async function loadUserFromServer() {
+
+  try {
+
+    const res = await fetch(
+      `http://localhost:5000/api/user/${user.email}`
+    );
+
+    const data = await res.json();
+
+    if (res.ok) {
+
+      user = data;
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+
+      displayUser();
+
+    }
+
+  } catch (error) {
+
+    console.error(error);
+
+  }
+
+}
+
+// ================= DISPLAY =================
+function displayUser() {
+
+  document.getElementById("name").innerText = user.name;
+
+  document.getElementById("age").innerText = user.age;
+
+  document.getElementById("role").innerText =
+    user.age >= 18 ? "Adult" : "Junior";
+
+  document.getElementById("points").innerText =
+    user.points || 0;
+
+  document.getElementById("uploads").innerText =
+    user.uploads || 0;
+
+  updateRewards(user.points || 0);
+
+}
+
+// ================= REWARD =================
+function updateRewards(points) {
+
+  const reward =
+    Math.floor(points / 100) * 50;
+
+  document.getElementById("rewards").innerText =
+    "₹" + reward;
+
+}
+
+// ================= SCROLL =================
+function scrollToUpload() {
+
+  document.getElementById("upload")
+    .scrollIntoView({
+      behavior: "smooth"
+    });
+
+}
+
+// ================= IMAGE PREVIEW =================
+document.getElementById("trashPhoto")
+.addEventListener("change", function () {
+
+  const file = this.files[0];
+
+  if (file) {
+
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+
+      document.getElementById("preview").src =
+        e.target.result;
+
+    };
+
+    reader.readAsDataURL(file);
+
+  }
+
+});
+
+// ================= UPLOAD =================
+async function submitUpload() {
+
+  const fileInput =
+    document.getElementById("trashPhoto");
+
+  if (!fileInput.files[0]) {
+
+    alert("Please select an image!");
+    return;
+
+  }
+
+  const file = fileInput.files[0];
+
+  try {
+
+    const response = await fetch(
+      "http://localhost:5000/api/upload",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          email: user.email,
+          imageName: file.name.trim().toLowerCase()
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    // ================= SUCCESS =================
+    if (response.ok) {
+
+      alert("✅ Upload Successful! +10 Points");
+
+      user = data.user;
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(user)
+      );
+
+      displayUser();
+
+      // Reset image
+      fileInput.value = "";
+
+      document.getElementById("preview").src = "";
+
+    }
+
+    // ================= DUPLICATE =================
+    else {
+
+      alert(data.message);
+
+    }
+
+  }
+
+  catch (error) {
+
+    console.error(error);
+
+    alert("Server Error");
+
+  }
+
+}
+
+// ================= LOGOUT =================
+function logout() {
+
+  localStorage.clear();
+
+  window.location.href = "login.html";
+
+}
+
+// ================= INITIAL LOAD =================
+loadUserFromServer();
+</script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Clean | Admin Dashboard</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#f4f4f4;
+  padding:20px;
+}
+
+/* ================= HEADER ================= */
+
+header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:#27ae60;
+  color:white;
+  padding:15px 25px;
+  border-radius:10px;
+  margin-bottom:20px;
+}
+
+.logout-btn{
+  padding:10px 15px;
+  border:none;
+  background:white;
+  color:#27ae60;
+  font-weight:bold;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+/* ================= CARDS ================= */
+
+.dashboard-cards{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  text-align:center;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.card h3{
+  margin-bottom:10px;
+  color:#27ae60;
+}
+
+.card p{
+  font-size:28px;
+  font-weight:bold;
+}
+
+/* ================= TABLE ================= */
+
+.table-container{
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+.table-title{
+  margin-bottom:20px;
+  color:#27ae60;
+  text-align:center;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+th,td{
+  padding:12px;
+  border:1px solid #ddd;
+  text-align:center;
+}
+
+th{
+  background:#27ae60;
+  color:white;
+}
+
+tr:nth-child(even){
+  background:#f9f9f9;
+}
+
+/* ================= STATUS ================= */
+
+.pending{
+  color:orange;
+  font-weight:bold;
+}
+
+.approved{
+  color:green;
+  font-weight:bold;
+}
+
+.rejected{
+  color:red;
+  font-weight:bold;
+}
+
+/* ================= BUTTONS ================= */
+
+.action-btn{
+  padding:7px 12px;
+  margin:3px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  color:white;
+}
+
+.approve-btn{
+  background:#27ae60;
+}
+
+.reject-btn{
+  background:#e74c3c;
+}
+
+</style>
+</head>
+
+<body>
+
+<header>
+
+<h2>🌱 Smart Clean Admin Panel</h2>
+
+<button class="logout-btn" onclick="logout()">
+Logout
+</button>
+
+</header>
+
+<!-- ================= DASHBOARD CARDS ================= -->
+
+<div class="dashboard-cards">
+
+<div class="card">
+<h3>Total Users</h3>
+<p id="totalUsers">0</p>
+</div>
+
+<div class="card">
+<h3>Total Uploads</h3>
+<p id="totalUploads">0</p>
+</div>
+
+<div class="card">
+<h3>Total Points</h3>
+<p id="totalPoints">0</p>
+</div>
+
+<div class="card">
+<h3>Total Rewards</h3>
+<p id="totalRewards">₹0</p>
+</div>
+
+</div>
+
+<!-- ================= TABLE ================= -->
+
+<div class="table-container">
+
+<h1 class="table-title">
+Registered Users & Upload Verification
+</h1>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Age</th>
+<th>Uploads</th>
+<th>Points</th>
+<th>Rewards</th>
+<th>Image</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+
+</thead>
+
+<tbody id="userTable">
+
+</tbody>
+
+</table>
+
+</div>
+
+<script>
+
+// ================= ADMIN AUTH =================
+
+const adminLoggedIn =
+localStorage.getItem("adminLoggedIn");
+
+if(adminLoggedIn !== "true"){
+
+  alert("Please login as admin");
+
+  window.location.href =
+  "admin-login.html";
+
+}
+
+// ================= LOAD USERS =================
+
+async function loadUsers(){
+
+  try{
+
+    const res = await fetch(
+      "http://localhost:5000/api/admin/users"
+    );
+
+    const users = await res.json();
+
+    const table =
+    document.getElementById("userTable");
+
+    table.innerHTML = "";
+
+    let totalUploads = 0;
+    let totalPoints = 0;
+    let totalRewards = 0;
+
+    users.forEach(user => {
+
+      totalUploads += user.uploads || 0;
+      totalPoints += user.points || 0;
+
+      let rewards =
+      Math.floor((user.points || 0) / 100) * 50;
+
+      totalRewards += rewards;
+
+      // ================= IMAGE DETAILS =================
+
+      let imageName = "No Upload";
+      let status = "pending";
+
+      if(
+        user.uploadedImages &&
+        user.uploadedImages.length > 0
+      ){
+
+        const latestImage =
+        user.uploadedImages[
+          user.uploadedImages.length - 1
+        ];
+
+        imageName =
+        latestImage.imageName;
+
+        status =
+        latestImage.status;
+
+      }
+
+      // ================= ACTION BUTTONS =================
+
+      let actionButtons = "";
+
+      if(status === "pending"){
+
+        actionButtons = `
+
+        <button
+        class="action-btn approve-btn"
+        onclick="approveUpload(
+          '${user.email}',
+          '${imageName}'
+        )">
+
+        Approve
+
+        </button>
+
+        <button
+        class="action-btn reject-btn"
+        onclick="rejectUpload(
+          '${user.email}',
+          '${imageName}'
+        )">
+
+        Reject
+
+        </button>
+
+        `;
+
+      }
+
+      else{
+
+        actionButtons =
+        "Action Completed";
+
+      }
+
+      // ================= TABLE ROW =================
+
+      table.innerHTML += `
+
+      <tr>
+
+        <td>${user.name}</td>
+
+        <td>${user.email}</td>
+
+        <td>${user.age}</td>
+
+        <td>${user.uploads}</td>
+
+        <td>${user.points}</td>
+
+        <td>₹${rewards}</td>
+
+        <td>${imageName}</td>
+
+        <td class="${status}">
+          ${status.toUpperCase()}
+        </td>
+
+        <td>
+          ${actionButtons}
+        </td>
+
+      </tr>
+
+      `;
+
+    });
+
+    // ================= UPDATE CARDS =================
+
+    document.getElementById(
+      "totalUsers"
+    ).innerText = users.length;
+
+    document.getElementById(
+      "totalUploads"
+    ).innerText = totalUploads;
+
+    document.getElementById(
+      "totalPoints"
+    ).innerText = totalPoints;
+
+    document.getElementById(
+      "totalRewards"
+    ).innerText = "₹" + totalRewards;
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    alert("Failed to load users");
+
+  }
+
+}
+
+// ================= APPROVE =================
+
+async function approveUpload(email,imageName){
+
+  try{
+
+    const res = await fetch(
+      "http://localhost:5000/api/admin/approve",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          email,
+          imageName
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    alert(data.message);
+
+    loadUsers();
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    alert("Approval Failed");
+
+  }
+
+}
+
+// ================= REJECT =================
+
+async function rejectUpload(email,imageName){
+
+  try{
+
+    const res = await fetch(
+      "http://localhost:5000/api/admin/reject",
+      {
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          email,
+          imageName
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    alert(data.message);
+
+    loadUsers();
+
+  }
+
+  catch(error){
+
+    console.error(error);
+
+    alert("Reject Failed");
+
+  }
+
+}
+
+// ================= LOGOUT =================
+
+function logout(){
+
+  localStorage.removeItem(
+    "adminLoggedIn"
+  );
+
+  alert("Admin Logged Out");
+
+  window.location.href =
+  "admin-login.html";
+
+}
+
+// ================= INITIAL LOAD =================
+
+loadUsers();
+
+</script>
+
+</body>
+</html>

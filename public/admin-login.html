@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Smart Clean | Admin Login</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:
+  linear-gradient(
+    rgba(0,0,0,0.6),
+    rgba(0,0,0,0.6)
+  ),
+  url("https://images.unsplash.com/photo-1501004318641-b39e6451bec6");
+
+  background-size:cover;
+  background-position:center;
+}
+
+.login-box{
+  width:380px;
+  background:white;
+  padding:40px;
+  border-radius:15px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(0,0,0,0.3);
+}
+
+h1{
+  margin-bottom:10px;
+  color:#27ae60;
+}
+
+.subtitle{
+  color:#666;
+  margin-bottom:25px;
+  font-size:14px;
+}
+
+.input-box{
+  margin-bottom:20px;
+}
+
+.input-box input{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-bottom:2px solid #ccc;
+  outline:none;
+  font-size:16px;
+}
+
+.input-box input:focus{
+  border-bottom:2px solid #27ae60;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  background:#27ae60;
+  color:white;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+  font-size:16px;
+  transition:0.3s;
+}
+
+button:hover{
+  background:#219150;
+}
+
+.note{
+  margin-top:20px;
+  font-size:13px;
+  color:#777;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="login-box">
+
+<h1>🌱 Smart Clean</h1>
+
+<p class="subtitle">
+Admin Authentication Portal
+</p>
+
+<form id="adminLoginForm">
+
+<div class="input-box">
+<input
+type="text"
+id="username"
+placeholder="Enter Admin Username"
+required>
+</div>
+
+<div class="input-box">
+<input
+type="password"
+id="password"
+placeholder="Enter Admin Password"
+required>
+</div>
+
+<button type="submit">
+Admin Login
+</button>
+
+</form>
+
+<p class="note">
+Default Username: admin <br>
+Default Password: admin123
+</p>
+
+</div>
+
+<script>
+
+const form =
+document.getElementById("adminLoginForm");
+
+form.addEventListener("submit", function(e){
+
+  e.preventDefault();
+
+  const username =
+  document.getElementById("username")
+  .value
+  .trim();
+
+  const password =
+  document.getElementById("password")
+  .value
+  .trim();
+
+  // ================= ADMIN LOGIN =================
+  if(
+    username === "admin" &&
+    password === "admin123"
+  ){
+
+    // Save admin session
+    localStorage.setItem(
+      "adminLoggedIn",
+      "true"
+    );
+
+    localStorage.setItem(
+      "adminName",
+      username
+    );
+
+    alert("✅ Admin Login Successful");
+
+    // Redirect
+    window.location.href =
+    "admin-dashboard.html";
+
+  }
+
+  else{
+
+    alert("❌ Invalid Admin Credentials");
+
+  }
+
+});
+
+</script>
+
+</body>
+</html>
